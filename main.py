@@ -16,7 +16,7 @@ from utils import f1_score, get_tags, format_result
 
 
 class ChineseNER(object):
-    
+
     def __init__(self, entry="train"):
         self.load_config()
         self.__init_model(entry)
@@ -61,7 +61,7 @@ class ChineseNER(object):
     def load_config(self):
         try:
             fopen = open("models/config.yml")
-            config = yaml.load(fopen)
+            config = yaml.safe_load(fopen)
             fopen.close()
         except Exception as error:
             print("Load config failed, using default config {}".format(error))
@@ -70,9 +70,9 @@ class ChineseNER(object):
                 "embedding_size": 100,
                 "hidden_size": 128,
                 "batch_size": 20,
-                "dropout":0.5,
+                "dropout": 0.5,
                 "model_path": "models/",
-                "tasg": ["ORG", "PER"]
+                "tags": ["ORG", "PER"]
             }
             yaml.dump(config, fopen)
             fopen.close()
@@ -114,16 +114,16 @@ class ChineseNER(object):
                 length_tensor = torch.tensor(length, dtype=torch.long)
 
                 loss = self.model.neg_log_likelihood(sentences_tensor, tags_tensor, length_tensor)
-                progress = ("█"*int(index * 25 / self.total_size)).ljust(25)
+                progress = ("█" * int(index * 25 / self.total_size)).ljust(25)
                 print("""epoch [{}] |{}| {}/{}\n\tloss {:.2f}""".format(
-                        epoch, progress, index, self.total_size, loss.cpu().tolist()[0]
-                    )
+                    epoch, progress, index, self.total_size, loss.cpu().tolist()[0]
+                )
                 )
                 self.evaluate()
-                print("-"*50)
+                print("-" * 50)
                 loss.backward()
                 optimizer.step()
-                torch.save(self.model.state_dict(), self.model_path+'params.pkl')
+                torch.save(self.model.state_dict(), self.model_path + 'params.pkl')
 
     def evaluate(self):
         sentences, labels, length = zip(*self.dev_batch.__next__())
@@ -146,10 +146,11 @@ class ChineseNER(object):
             entities += format_result(tags, input_str, tag)
         return entities
 
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("menu:\n\ttrain\n\tpredict")
-        exit()  
+        exit()
     if sys.argv[1] == "train":
         cn = ChineseNER("train")
         cn.train()
